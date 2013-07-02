@@ -1095,3 +1095,7 @@ def CorMapPlot(Map, scale='relative'):
 
     ax.format_coord = format_coord
     show()
+
+if __name__ == '__main__':
+    import sys
+    sys.exit(1)
