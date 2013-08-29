@@ -4,6 +4,7 @@
 """
 Functions for examining seaonality in forex ohlc series.
 
+TODO: remove the import bloat.
 """
 
 # import modules   ##############################
@@ -54,16 +55,14 @@ def load_ohlc(filename):
     # 0: I open the file at the beginning but never close it at the end.
     # 1: One year of candles takes 33 seconds. Implement some kind of
     #    progress bar based on file size. Needs major rewrite to load in
-    #chuncks instead of
-    #    all at once. This woud allow progress bar. unfortunately this
-    # means concatenating
+    #    chuncks instead of all at once. This woud allow progress bar.
+    #    unfortunately this means concatenating
     #    a df over and over, which I think means copying each time.
     # 2: Parse based on header line if exists or ignore header line if not.
     # 3: Include some kind of error handling. inc: empty file, High and Low not
     #    actually high and low, gappy data, multiples, etc.
     # 4: Even better, autodetect OHLC. Should be simple to figure out from
-    # just 10 or so lines.
-    #    If can't autodetect, throw excpetion.
+    #    just 10 or so lines. If can't autodetect, throw excpetion.
     # The data I downloaded first has many 1 pip gaps between close and open.
     # Do a stats printout with % gaps, average open-close gap size, % missing
     # data.
@@ -72,8 +71,8 @@ def load_ohlc(filename):
     # sense. Then I could
     # include tick-ohlc conversion there. might make more sense.
     # 5: Convert column names to lower case as to be compatible with standard
-    # pandas OHLC scheme.
-    # All coe needs to be refactored this way.
+    # pandas OHLC scheme. (You sure about this?)
+    # All code needs to be refactored this way.
     """
     start_time = time.time()
     if '/' in filename:
@@ -110,10 +109,10 @@ def load_ohlc(filename):
 def down_sample(prices, offset):
     """
     Resamples raw OHLC price data to the frequency specified in 'offset'.
+
     Frequency is given in minutes by default. If offset is non-numeric,
-     use standard pandas
-    #offset aliases.
-    # http://pandas.pydata.org/pandas-docs/dev/timeseries.html#offset-aliases
+    uses standard pandas offset aliases.
+    http://pandas.pydata.org/pandas-docs/dev/timeseries.html#offset-aliases
     # TODO:
     # Put in something so that extra columns get passed somehow. Not sure how
     # to do this. If not, put in a warning that says there are extra columns
@@ -123,7 +122,8 @@ def down_sample(prices, offset):
     # since they aren't multiples and information will be lost.
     # Find a way to deal with incomplete or unfinished candles.
     # Answer: add boolean column called 'complete'
-    # change to lower case, or make option to use both.
+    # (This wa implemented in the backtest version of down_sample.)
+    # Change to lower case, or make option to use both.
     """
     ohlc_dict = {'Open': 'first',
                  'High': 'max',
@@ -143,33 +143,28 @@ def down_sample(prices, offset):
 
 def dst_slice(ohlc_series, EDT=None, BST=None, label=True, verbose=False, clean=False):
     """
-    Takes OHLC series and labels by DST period. If EDT (eastern daylight Time)
-    and/or
-    BST (British Summer Time) are given as arguments (True or False), the
-    output data are selected by these conditons. If verbose=True, then DST
-    periods
-    are given and the user is prompted to select one for output. (This last
-        option is
-    not yet fully implemented.)
+    Takes OHLC time series and labels by DST status.
+
+    If EDT (eastern daylight Time) and/or BST (British Summer Time) are given
+    as arguments (True or False), the output data are selected by these
+    conditons. If verbose=True, then DST periods are given and the user is
+    prompted to select one for output. (This last option is not yet fully
+    implemented.)
     TO DO:
-    # 2: Could be faster: does 1 year of 5Min data in 8.9 seconds.
+    # 2: Could be much faster: does 1 year of 5Min data in 8.9 seconds.
+    #    This got much slower in pandas 12/13. Not sure why: 405 seconds.
     #    Doing this on a 1 hr resampled copy will save on lots of time. Then
-    resample back to
-    #    original and combine to the two DFs? Or, do it like you did
-    classify_ohlc.
+    #    resample back to original and combine to the two DFs? Or, do it like
+    #    you did classify_ohlc.
     # 4: Finish verbose option to select all data, or just certain (1 or more)
-    DST
-    #    sections.
+    #    DST sections.
     # 5: Give option to save?
     # 6: This module should be the one to start propagating metadata.
     # 6: Give option to remove change-over weeks and convert True/True regions
     #    to BST or whatever. This would closely approximate what is seen in
-    the US at
-    #    the expense of losing four weeks and losing accuracy from coutries
-    not observing
-    #    nothern hemisphere DST.
-    # 7: Need to test all of this more thoroughly.
-    # 8: Need to write unit tests.
+    #    the US at the expense of losing four weeks and losing accuracy from
+    #    coutries not observing nothern hemisphere DST.
+    # 7: Need to test all of this with unit tests.
     """
     start_time = time.time()
     new_york_zone = pytz.timezone('US/Eastern')
@@ -318,9 +313,9 @@ def classify_ohlc(ohlc_series, boolean=True):
     # Above join='inner' means index intersection
     results = results.dropna()
     # Output at this point is satisfactory, though not necessarily the same
-    form
+    # form
     # as input with regard to weekends. The following was my attempt to fix
-    this
+    # this
     # by concat-ing with the original df and then dropping duplicates.
     # This feature is not worth the effort right now.
     # results = pd.concat([prices, results], axis=0)
