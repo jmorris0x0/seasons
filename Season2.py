@@ -185,31 +185,32 @@ def dst_slice(ohlc_series, EDT=None, BST=None, label=True, verbose=False, clean=
         london_zone).dst().seconds // 3600 == 1)  # Error? .total_seconds()
     old_newyork_test = (transition_time.astimezone(
         new_york_zone).dst().seconds // 3600 == 1)  # Error? .total_seconds()
-    dst_period = [prices.Times.iloc[0], old_london_test, old_newyork_test]
+    dst_period = [prices.Times.ix[0], old_london_test, old_newyork_test]
     counter_max = int(len(prices))  # This is my completion counter max
-    for i in range(0, counter_max):  # xrange not faster, maybe for large sets?
-        transition_time = prices.Times.iloc[i]  # 287us
+    for i in xrange(0, counter_max):  # xrange not faster, maybe for large sets?
+        transition_time = prices.Times.ix[i]  # 287us
         london_test = (transition_time.astimezone(
             london_zone).dst().seconds // 3600 == 1)  # Err? .total_seconds()
         newyork_test = (transition_time.astimezone(
             new_york_zone).dst().seconds // 3600 == 1)  # Err? .total_seconds()
         if label == True:  # Label the candles if requested in fn call
-            prices.USDST.iloc[i] = newyork_test
-            prices.EUDST.iloc[i] = london_test
-
-        if ((london_test == old_london_test) & (newyork_test == old_newyork_test) != True):
-            dst_period.append(prices.Times.iloc[i])
+            prices.USDST.ix[i] = newyork_test  # SLOW: 1.54 ms
+            prices.EUDST.ix[i] = london_test  # SLOW: 1.54 ms
+        switch = ((london_test == old_london_test) &
+                  (newyork_test == old_newyork_test) != True)
+        if switch:
+            dst_period.append(prices.Times.ix[i])
             if verbose == True:
                 print dst_period
             dst_period_list.append(dst_period[:])
-            dst_period = [prices.Times.iloc[i], london_test, newyork_test]
+            dst_period = [prices.Times.ix[i], london_test, newyork_test]
             dst_period_counter = dst_period_counter + 1
         old_london_test = london_test
         old_newyork_test = newyork_test
         progress = (100 * i // counter_max)
         sys.stdout.write("\rPercent complete: %d%%   " % (progress))
         sys.stdout.flush()
-    dst_period.append(prices.Times.iloc[
+    dst_period.append(prices.Times.ix[
                       -1])  # put the last value in dst_period
     if verbose == True:
         print dst_period
@@ -480,7 +481,7 @@ def CandleStats(ohlc_series):
         sys.stdout.flush()
 
     # Now move the first entry to the end and call it: 1970-01-01 23:59:59
-    Results = Results.append(Results.iloc[0], ignore_index=True)
+    Results = Results.append(Results.ix[0], ignore_index=True)
     Results = Results.drop(Results.index[0])
     # The index has just grown by 1. df.ix is now broken.
     # Great to change the TimeStamp but I don't think it's allowed
@@ -612,7 +613,7 @@ def AverageDay(ohlc_series):
         # Select the data
         LoopPrices = prices[(((prices.index.hour * (60 / interval) +
                                (prices.index.minute // interval))) == (num))]
-        Results.LogRet.iloc[num] = average(LoopPrices.LogRet)
+        Results.LogRet.ix[num] = average(LoopPrices.LogRet)
         progress = (100 * num // bins)
         sys.stdout.write("\rPercent complete: %d%%   " % (progress))
         sys.stdout.flush()
