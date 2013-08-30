@@ -443,7 +443,7 @@ def CandleStats(ohlc_series):
         raise Exception("Frequency must be 60 or integer factor of 60.")
     interval = tsInterval.seconds // 60  # Error? .total_seconds()
     bins = 24 * (60 // interval)  # Keep integer division here.
-    Results = DataFrame(range(0, bins))
+    Results = pd.DataFrame(range(0, bins))
     # Create indices for later plotting
     intervalStr = str(int(interval)) + 'Min'
     Results['Time'] = pd.date_range('1970-01-01', '1970-01-01 23:59:59',
@@ -500,14 +500,16 @@ def CandleStats(ohlc_series):
 
 def Zebra(target, ZebraNum):
     xlimits = target.get_xlim()
-    ZebraNum = ZebraNum / 2
-    xLength = xlimits[1] - xlimits[0]
-    ZebraWidth = (xLength / ZebraNum) / 2
-    i = xStart
-    # i = i + (xLength/ZebraNum) # Uncomment to start color shading 2nd bar
+    xStart = xlimits[0]
+    xEnd = xlimits[1]
+    ZebraNum = ZebraNum/2
+    xLength = xEnd - xStart
+    ZebraWidth = (xLength/ZebraNum)/2
+    i= xStart
+    # i = i + (xLength/ZebraNum) # Uncomment to start color shading second bar
     while i < xEnd:
-        target.axvspan(i, i + ZebraWidth, facecolor='0.2', alpha=0.1)
-        i = i + (xLength / ZebraNum)
+        target.axvspan(i, i+ ZebraWidth, facecolor='0.2', alpha=0.05)
+        i = i + (xLength/ZebraNum)
     return target
 
 
