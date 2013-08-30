@@ -2,9 +2,12 @@
 # -*- coding: utf-8 -*-
 
 """
-Functions for examining seaonality in forex ohlc series.
+Functions for examining seasonality and seasonal correlation in OHLC
+financial time series.
 
-TODO: remove the import bloat.
+Includes function for correcting DST shift before processing.
+
+TODO: remove the import bloat. Convert all print() to Py3 style.
 """
 
 # import modules   ##############################
@@ -130,7 +133,7 @@ def down_sample(prices, offset):
                  'Low': 'min',
                  'Close': 'last'}
     offset = str(offset)
-    if offset.isdigit() == True:
+    if offset.isdigit():
         offset = str(offset) + 'Min'
     # prices = price.drop(price.index[0])
     # To drop multiples: df.drop(df.index[[1, 3]])
@@ -172,7 +175,7 @@ def dst_slice(ohlc_series, EDT=None, BST=None, label=True, verbose=False, clean=
     # Create a copy and make a column with index cast as datetime.datetime
     prices = ohlc_series.copy()
     prices['Times'] = prices.index.to_pydatetime()
-    if label == True:  # Label the candles if requested in fn call
+    if label:  # Label the candles if requested in fn call
         prices['USDST'] = True  # initialize column to boolean
         prices['EUDST'] = True  # initialize column to boolean
     # Loop through and find DST for each entry using pytz
@@ -193,14 +196,14 @@ def dst_slice(ohlc_series, EDT=None, BST=None, label=True, verbose=False, clean=
             london_zone).dst().seconds // 3600 == 1)  # Err? .total_seconds()
         newyork_test = (transition_time.astimezone(
             new_york_zone).dst().seconds // 3600 == 1)  # Err? .total_seconds()
-        if label == True:  # Label the candles if requested in fn call
+        if label:  # Label the candles if requested in fn call
             prices.USDST.ix[i] = newyork_test  # SLOW: 1.54 ms
             prices.EUDST.ix[i] = london_test  # SLOW: 1.54 ms
         switch = ((london_test == old_london_test) &
                   (newyork_test == old_newyork_test) != True)
         if switch:
             dst_period.append(prices.Times.ix[i])
-            if verbose == True:
+            if verbose:
                 print dst_period
             dst_period_list.append(dst_period[:])
             dst_period = [prices.Times.ix[i], london_test, newyork_test]
@@ -212,14 +215,14 @@ def dst_slice(ohlc_series, EDT=None, BST=None, label=True, verbose=False, clean=
         sys.stdout.flush()
     dst_period.append(prices.Times.ix[
                       -1])  # put the last value in dst_period
-    if verbose == True:
+    if verbose:
         print dst_period
     dst_period_list.append(dst_period[
                            :])  # Append the last date to the series list
     time_diff = str(round(time.time() - start_time, 1))
     print '\r%d candles checked in in  %s seconds' % (len(prices), time_diff)
     print '\rThere are %s DST periods in this sample' % (dst_period_counter)
-    if (verbose == True) & (dst_period_counter > 1):
+    if ((verbose == True) & (dst_period_counter > 1)):
         var = raw_input("Select subseries to return: ")
         var = int(var) - 1
     if EDT:
@@ -497,19 +500,18 @@ def CandleStats(ohlc_series):
     return Results
 
 
-
 def Zebra(target, ZebraNum):
     xlimits = target.get_xlim()
     xStart = xlimits[0]
     xEnd = xlimits[1]
-    ZebraNum = ZebraNum/2
+    ZebraNum = ZebraNum / 2
     xLength = xEnd - xStart
-    ZebraWidth = (xLength/ZebraNum)/2
-    i= xStart
+    ZebraWidth = (xLength / ZebraNum) / 2
+    i = xStart
     # i = i + (xLength/ZebraNum) # Uncomment to start color shading second bar
     while i < xEnd:
-        target.axvspan(i, i+ ZebraWidth, facecolor='0.2', alpha=0.05)
-        i = i + (xLength/ZebraNum)
+        target.axvspan(i, i + ZebraWidth, facecolor='0.2', alpha=0.05)
+        i = i + (xLength / ZebraNum)
     return target
 
 
@@ -596,7 +598,7 @@ def AverageDay(ohlc_series):
     # This next section is taken from CandleStats.
 
     bins = 24 * (60 // interval)  # Keep integer division here.
-    Results = DataFrame(range(0, bins))
+    Results = pd.DataFrame(range(0, bins))
     # Create indices for later plotting
     intervalStr = str(int(interval)) + 'Min'
     Results['Time'] = pd.date_range('1970-01-01', '1970-01-01 23:59:00',
@@ -723,7 +725,7 @@ def CorLag(*args, **kwargs):
     interval = ts1Interval.seconds // 60  # Error? .total_seconds()
     bins = 24 * (60 // interval)  # Keep integer division here.
     intervalStr = str(int(interval)) + 'Min'
-    Results = DataFrame(range(0, bins))
+    Results = pd.DataFrame(range(0, bins))
     Results['Time'] = pd.date_range('1970-01-01', '1970-01-01 23:59:00',
                                     freq=intervalStr)
     Results['FloatTime'] = mdates.date2num(Results.Time)
@@ -745,7 +747,7 @@ def CorLag(*args, **kwargs):
                             (LaggedTs2.index.minute // interval))) == (num)]
 
         Correlation = RowTs1.corr(ColTs2, method=method, min_periods=10)
-        if math.isnan(Correlation) == True:
+        if math.isnan(Correlation):
                 Correlation = 0
         Results = Results.set_value(num, 'LagCor', Correlation)
         Intersect = RowTs1 + ColTs2
@@ -758,12 +760,12 @@ def CorLag(*args, **kwargs):
                                    (CriticalVal(Intersect,
                                     cl="99",
                                     method=method)))
-        if mask == True:
+        if mask:
             print Intersect, Correlation, (CriticalVal(Intersect))
             # Show intersection of two time series.
             # print len(RowTs1), len(ColTs2), Intersect ,
             # print CriticalVal(Intersect), Correlation
-            if fabs(Correlation) < fabs(CriticalVal(Intersect)):
+            if (fabs(Correlation) < fabs(CriticalVal(Intersect))):
                 Results = Results.set_value(num, 'LagCor', 0)
     time_diff = str(round(time.time() - start_time, 1))
     print '\rCorrelation sequence completed in %s seconds' % time_diff
@@ -991,9 +993,9 @@ def CorMap(*args, **kwargs):
             # Now set the values
             Correlation = RowTs1.corr(ColTs2, method=method, min_periods=10)
             map[row, col] = Correlation
-            if math.isnan(Correlation) == True:
+            if math.isnan(Correlation):
                 Correlation = 0
-            if mask == True:
+            if mask:
                 # Count intersection of two time series.
                 Intersect = RowTs1 + ColTs2
                 Intersect = len(Intersect.dropna())
@@ -1001,7 +1003,8 @@ def CorMap(*args, **kwargs):
                 # Try gapped and ungapped data.
                 # print CriticalVal(Intersect), Correlation
                 critical = CriticalVal(Intersect, cl=cl, method=method)
-                if fabs(Correlation) < fabs(critical):
+                critcheck = (fabs(Correlation) < fabs(critical))
+                if critcheck:
                     map[row, col] = 0
     time_diff = str(round(time.time() - start_time, 1))
     print '\rCorrelation map completed in %s seconds' % time_diff
