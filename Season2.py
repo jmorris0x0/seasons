@@ -2,12 +2,23 @@
 # -*- coding: utf-8 -*-
 
 """
-Functions for examining seasonality and seasonal correlation in OHLC
+Functions for examining seasonality and seasonal correlations in OHLC
 financial time series.
 
-Includes function for correcting DST shift before processing.
+Includes function for correcting DST shift before analysis.
 
-TODO: remove the import bloat. Convert all print() to Py3 style.
+TODO: 
+Remove the import bloat.
+Ready module to be incorporated into a program. This entails:
+Abandon DF metadata. That stuff can be coded much easier in a wrapper
+program.
+Break up CandleTrans. Make candlestats work with any input.
+Write unit tests.
+Move useful stuff from backtest module, most noteably tick2ohlc.
+Consider using a plotting function from R or Java. matplotlib = meh.
+Consider inverting your colorschemes for web display.
+
+LINE PROFILES ARE NO LONGER ACCURATE!
 """
 
 # import modules   ##############################
@@ -30,7 +41,7 @@ except:
     print "[ERROR] One or more of the required modules cannot be loaded."
     sys.exit(0)
 
-#
+
 # IMPORTANT:
 # Convention: The name of a candle is the time at which it closes.
 # The 6:00 candle closes at 6:00 whether you are looking at hour candles or
@@ -409,13 +420,10 @@ def CandleStats(ohlc_series):
 
     # TO DO:
     # 4: Break this function up into pieces. That's probably the only way that
-    I will
-    # be able to pass metadata on to subsequent tools. When you break it up,
-    you
-    will
+    I will be able to pass metadata on to subsequent tools. When you break it
+    up, you will
     # need to include another metadata column that says what the data is
-    called
-    and
+    called and
     # what column it's in.
     # 5: Contains many inefficient df.set_value. Remove them?
     # # Note that there will be missing data on the right side of the graph.
