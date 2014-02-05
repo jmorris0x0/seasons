@@ -7,7 +7,14 @@ financial time series.
 
 Includes function for correcting DST shift before analysis.
 
-TODO: 
+TODO:
+Time to move this to Python 3.
+Rewrite this whole thing to be more OO.
+Break up into chunks that interact better with my SQL securites DB.
+Automate what seems useful into PHP or JS for use with a web utility.
+
+Also:
+Fix candle binning chaos.
 Remove the import bloat.
 Ready module to be incorporated into a program. This entails:
 Abandon DF metadata. That stuff can be coded much easier in a wrapper
